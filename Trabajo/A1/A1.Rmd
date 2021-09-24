@@ -1,0 +1,419 @@
+---
+title: "A1"
+author: "Alvaro Rodriguez Mujica"
+date: "14/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Tarea 1
+
+## Ejercicio 0
+
+### 1)
+Crea un vector dado_honesto con 100 numeros usando sample()
+```{r}
+(dado_honesto <- sample(1:6, 100, replace = TRUE))
+```
+
+Frecuencia Absoluta y Relativa con "table"
+```{r}
+(df1 <- table(dado_honesto))
+
+(prop.table(df1))
+```
+
+Frecuencia Absoluta con dplyr
+```{r}
+library(tidyverse)
+df2 <- data.frame(dado_honesto)
+(df2 %>%
+  count(dado_honesto))
+```
+
+### 2)
+
+Crea un vector dado_honesto con 100 numeros usando sample() de manera que la probabilidad de que el número elegido valga 6 sea el doble que la probabilidad de elegir culquiera de los cinco números restantes
+```{r}
+(dado_cargado <- sample(1:6, 100, replace = TRUE, prob = c(1/15,1/15,1/15,1/15,1/15,4/6 )))
+```
+
+Frecuencias Absolutas y Relativas con "table"
+```{r}
+(df3 <- table(dado_cargado))
+
+(prop.table(df3))
+```
+
+Frecuencia Absoluta con dplyr
+```{r}
+df4 <- data.frame(dado_cargado)
+(df4 %>%
+  count(dado_cargado))
+```
+
+
+### 3)
+
+```{r}
+(v1 <- c(rep(4, times = 4), rep(3, times = 4), rep(2, times = 4), rep(1, times = 4)))
+
+(v2 <- c(rep(1, times = 1), rep(2, times = 2), rep(3, times = 3), rep(4, times = 4), rep(5, times = 5)))
+
+(v3 <- rep(c(1,2,3,4), times = 4))
+```
+
+
+### 4) 
+```{r}
+
+mpg2 <- mpg %>% 
+  select(starts_with("c")) %>% 
+  filter(class == "pickup")
+
+(mpg2)
+```
+
+### 5)
+```{r}
+library(haven)
+census <- read_dta("Data/census.dta")
+```
+
+Poblaciones totales de las regiones censales
+```{r}
+(census2 <- census %>% 
+   group_by(region) %>%
+   summarize(total_pop = sum(pop)))
+```
+
+Diagrama de barras
+```{r}
+library(ggplot2)
+ggplot(census2, mapping = aes(x = region, y = total_pop)) + 
+  geom_bar(stat = "identity")
+```
+
+Orden de los estados por número de población (de mayor a menor)
+```{r}
+arrange(census, desc(pop))
+```
+
+```{r}
+census3 <- census %>% 
+  mutate(census, prop_mayor = pop65p / pop) %>%  
+  select(medage, prop_mayor) %>% 
+  arrange(medage)
+head(census3, 10)
+```
+
+Histograma de los valores de medage y con la curva de densidad de la variable superpuesta
+```{r}
+(ggplot(data = census) + 
+  geom_histogram(mapping = aes(medage), binwidth = 0.3) + 
+  geom_density(mapping = aes(medage)))
+```
+
+
+## Ejercicio 1
+
+Carga cholesterol.csv
+```{r}
+chlstrl = read.csv(file = "./data/cholesterol.csv")
+view(chlstrl)
+```
+
+El data.frame chlstrl tiene 403 observaciones en 7 variables. Las siete variables son: 
+- chol: variable cuantitativa
+- age: variable cuantitativa
+- gender: variable categórica
+- height: variable cuantitativa
+- weight: variable cuantitativa
+- waist: variable cuantitativa
+- hip: variable cuantitativa
+
+Vemos si hay datos ausentes en cada una de las columnas de la tabla
+```{r}
+cbind(
+  lapply(
+    lapply(chlstrl, is.na)
+    , sum)
+  )
+```
+Vemos que hay 1 dato ausente en la columna de chol, 5 en la columna de height, 1 en la de weight, 2 en la de waist y 2 en la de hip. Vamos a localizar exactamente donde se encuentran los datos ausentes. 
+```{r}
+which(is.na(chlstrl$chol))
+which(is.na(chlstrl$height))
+which(is.na(chlstrl$weight))
+which(is.na(chlstrl$waist))
+which(is.na(chlstrl$hip))
+```
+Vamos a empezar con el análisis numérico de cada una de las variables empezando por las varibles cuantitativas: 
+
+a) chol: 
+```{r}
+min(chlstrl$chol, na.rm = TRUE)
+max(chlstrl$chol, na.rm = TRUE)
+mean(chlstrl$chol, na.rm = TRUE)
+median(chlstrl$chol, na.rm = TRUE)
+bxp_chol = boxplot(chlstrl$chol)
+ggplot(data = chlstrl) + 
+  geom_point(mapping = aes(x = age, y = chol)) + 
+  geom_smooth(mapping = aes(x = age, y = chol))
+ggplot(data = chlstrl, mapping = aes(x = age, y = chol, fill = gender)) + 
+  geom_bar(position = position_dodge(), stat = "identity", na.rm = TRUE)
+
+
+```
+
+b) age: 
+```{r}
+min(chlstrl$age, na.rm = TRUE)
+max(chlstrl$age, na.rm = TRUE)
+mean(chlstrl$age, na.rm = TRUE)
+median(chlstrl$age, na.rm = TRUE)
+bxp_age = boxplot(chlstrl$age)
+ggplot(data = chlstrl) + 
+  geom_point(mapping = aes(x = age, y = chol)) + 
+  geom_smooth(mapping = aes(x = age, y = chol))
+ggplot(data = chlstrl, mapping = aes(x = age, y = chol, fill = gender)) + 
+  geom_bar(position = position_dodge(), stat = "identity", na.rm = TRUE)
+```
+
+c) height: 
+```{r}
+min(chlstrl$height, na.rm = TRUE)
+max(chlstrl$height, na.rm = TRUE)
+mean(chlstrl$height, na.rm = TRUE)
+median(chlstrl$height, na.rm = TRUE)
+bxp_height = boxplot(chlstrl$height)
+ggplot(data = chlstrl) + 
+  geom_point(mapping = aes(x = height, y = chol)) + 
+  geom_smooth(mapping = aes(x = height, y = chol))
+ggplot(data = chlstrl, mapping = aes(x = height, y = weight, fill = gender)) + 
+  geom_bar(position = position_dodge(), stat = "identity", na.rm = TRUE)
+```
+
+d) weight
+```{r}
+min(chlstrl$weight, na.rm = TRUE)
+max(chlstrl$weight, na.rm = TRUE)
+mean(chlstrl$weight, na.rm = TRUE)
+median(chlstrl$weight, na.rm = TRUE)
+bxp_weight = boxplot(chlstrl$weight)
+ggplot(data = chlstrl) + 
+  geom_point(mapping = aes(x = weight, y = chol)) + 
+  geom_smooth(mapping = aes(x = weight, y = chol))
+ggplot(data = chlstrl, mapping = aes(x = height, y = weight, fill = gender)) + 
+  geom_bar(position = position_dodge(), stat = "identity", na.rm = TRUE)
+```
+
+e) waist
+```{r}
+min(chlstrl$waist, na.rm = TRUE)
+max(chlstrl$waist, na.rm = TRUE)
+mean(chlstrl$waist, na.rm = TRUE)
+median(chlstrl$waist, na.rm = TRUE)
+bxp_waist = boxplot(chlstrl$waist)
+ggplot(data = chlstrl) + 
+  geom_point(mapping = aes(x = waist, y = chol)) + 
+  geom_smooth(mapping = aes(x = waist, y = chol))
+ggplot(data = chlstrl, mapping = aes(x = waist, y = weight, fill = gender)) + 
+  geom_bar(position = position_dodge(), stat = "identity", na.rm = TRUE)
+```
+
+f) hip: 
+```{r}
+min(chlstrl$hip, na.rm = TRUE)
+max(chlstrl$hip, na.rm = TRUE)
+mean(chlstrl$hip, na.rm = TRUE)
+median(chlstrl$hip, na.rm = TRUE)
+bxp_hip = boxplot(chlstrl$hip)
+ggplot(data = chlstrl) + 
+  geom_point(mapping = aes(x = hip, y = chol), na.rm = TRUE) + 
+  geom_smooth(mapping = aes(x = hip, y = chol))
+ggplot(data = chlstrl, mapping = aes(x = hip, y = weight, fill = gender)) + 
+  geom_bar(position = position_dodge(), stat = "identity")
+```
+
+g) gender: 
+```{r}
+(df1 <- table(chlstrl$gender))
+
+(prop.table(df1))
+
+ggplot(data = chlstrl) + 
+  geom_point(mapping = aes(x = chol, y = gender), size = 0.75)
+
+ggplot(data = chlstrl, mapping = aes(x = height, y = chol, fill = gender)) + 
+  geom_bar(position = position_dodge(), stat = "identity")
+ggplot(data = chlstrl, mapping = aes(x = weight, y = chol, fill = gender)) + 
+  geom_bar(position = position_dodge(), stat = "identity")
+
+```
+
+
+Conversion de las columnas height y weight de pulgadas y libras a metros y kilogramos respectivamente
+```{r}
+pound_to_kg = 0.454
+chlstrl$weight <- chlstrl$weight / pound_to_kg
+head(chlstrl$weight)
+
+
+inch_to_m = 0.0254
+chlstrl$height <- chlstrl$height * inch_to_m
+head(chlstrl$height)
+
+
+```
+
+Añadir una nueva columna llamada BMI
+```{r}
+library(tidyverse)
+chlstrl <- chlstrl %>% 
+  mutate(BMI = weight / height^2)
+
+
+```
+
+Crear una nueva columna llamada age group
+```{r}
+
+chlstrl <- chlstrl %>% 
+  mutate(
+    ageGroup = case_when(
+      age > 10 & age <= 40 ~ "(10-40]",
+      age > 40 & age <= 70 ~ "(40-70]",
+      age > 70 & age <= 100 ~ "(70-100]"
+    )
+  )
+head(chlstrl$ageGroup)
+
+```
+
+¿Cuantas observaciones hay en cada nivel de ageGroup?
+```{r}
+view(chlstrl)
+chlstrl %>% 
+  group_by(ageGroup) %>% 
+  count(ageGroup)
+chlstrl %>% 
+  filter(gender == "female") %>% 
+  group_by(ageGroup) %>% 
+  summarize(mean_fem_chol = mean(chol),
+            mean_fem_bmi = mean(BMI, na.rm = TRUE))
+```
+
+
+## Ejercicio 2: Funciones de R
+
+Crea la función cambiosSigno
+```{r}
+cambiosSigno = function(x){
+  i = 0
+  for(k in seq(length(x)-1)){
+    if( x[ k ] * x[ k+1 ] < 0){
+      i = i + 1
+    }
+  }
+  return(i)
+}
+
+valores = c(-10:-1, 1:10)
+(x = sample(valores, 20, replace = TRUE))
+(cambiosSigno(x))
+
+```
+
+Crea la función cambiosSignoPos
+```{r}
+cambiosSignoPos = function(x) {
+  pos = c()
+  for(k in seq(length(x) - 1)){
+    if(x[k]*x[k+1]<0){
+      pos = append(pos, k+1)
+    }
+  }
+  if(is.null(pos) == TRUE){
+    print("No ha habido cambio de signo")
+  } else {
+    return(pos)
+  }
+}
+
+valores = c(-10:-1, 1:10)
+(x = sample(valores, 20, replace = TRUE))
+(cambiosSignoPos(x))
+```
+
+
+## Ejercicio 3
+
+3.6.1
+6) Recrea los siguientes gráficos: 
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+```
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_smooth(mapping = aes(group = drv), se = FALSE) + 
+  geom_point()
+```
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy, colour = drv)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+```
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point(aes(colour = drv)) + 
+  geom_smooth(se = FALSE)
+```
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point(aes(colour = drv)) + 
+  geom_smooth(aes(linetype = drv), se = FALSE)
+```
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy)) + 
+  geom_point(size = 4, colour = "white") + 
+  geom_point(aes(colour = drv))
+```
+
+5.2.4
+1)
+1.
+```{r}
+library(nycflights13)
+filter(flights, arr_delay >= 120)
+```
+2. 
+```{r}
+filter(flights, dest == "IAH" | dest == "HOU")
+```
+3. 
+```{r}
+filter(flights, carrier == "AA" | carrier == "DL" | carrier == "UA")
+```
+4. 
+```{r}
+filter(flights, month >= 7, month <= 9)
+```
+5. 
+```{r}
+filter(flights, arr_delay > 120, dep_delay <= 0)
+```
+6. 
+```{r}
+filter(flights, dep_delay >= 60, dep_delay - arr_delay > 30)
+```
+7. 
+```{r}
+filter(flights, dep_time <= 600 | dep_time == 2400)
+```
+
