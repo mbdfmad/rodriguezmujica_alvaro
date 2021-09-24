@@ -1,0 +1,180 @@
+---
+title: "Practica_1"
+author: "Alvaro Rodriguez Mujica"
+date: "9/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Preliminares
+```{r message = FALSE}
+
+library(tidyverse)
+```
+
+
+#Verbos de dplyr
+
+## select para elegir columnas
+
+```{r}
+library(gapminder)
+names(gapminder)
+```
+
+
+```{r}
+gapminder %>% 
+  select(lifeExp, gdpPercap) %>%  
+  tail(5)
+```
+
+
+```{r}
+gapminder %>% 
+  select(country:pop, -year)
+```
+
+```{r}
+gapminder %>% 
+  select(starts_with("c"))
+```
+
+
+## Filter para elegir filas
+
+```{r}
+gapminder %>% 
+  filter(country == "Spain", year == 1982)
+```
+
+
+```{r}
+gapminder %>% 
+  filter(year == "1997") %>% 
+  top_n(wt = gdpPercap,n = 5) %>% 
+  select(-continent) %>% 
+  arrange(desc(gdpPercap))
+
+```
+
+
+## Mutate para crear nuevas variables
+
+```{r}
+gapminder %>% 
+  mutate(gdp = gdpPercap * pop /10^6) %>% 
+  select(-continent, -lifeExp) %>%
+  filter(year == 1982) %>% 
+  sample_n(6)
+  
+```
+
+
+```{r}
+gapminder %>% 
+  mutate(gdp = gdpPercap * pop /10^6) %>% 
+  mutate_at("gdp", log10)
+```
+
+
+## Summarize para describir los datos
+
+```{r}
+iris %>% 
+  summarize(medPL = median(Petal.Length),
+            mean = mean(Petal.Length))
+```
+##group_by
+
+```{r}
+iris %>% 
+  group_by(Species) %>% 
+  summarize(medPL = median(Petal.Length),
+            mean = mean(Petal.Length))
+```
+
+
+```{r}
+mpg %>% 
+  group_by(manufacturer, cyl) %>% 
+  summarize(urbano = mean(cty), n = n())
+```
+
+
+## count()
+
+```{r}
+mpg %>% 
+  group_by(manufacturer, cyl) %>% 
+  count(cyl)
+```
+
+# Estructuras de control
+
+## If else
+
+```{r}
+(dado = sample(1:6, 1))
+if(dado == 5) {
+  resultado = "ganas"
+  
+} else {
+  resultado = "pierdes"
+}
+
+resultado
+
+```
+```{r}
+ifelse(sample(1:5) == 3, yes = "se cumple", no = "no se cumple")
+```
+
+```{r}
+valores = numeric(10) #creamos el vector del ramaño previsto. Reservate espacio para un vector de 10 numeros
+ for (k in 1:10){
+      sorteo = sample(1:20, 1)
+      print(paste0("k = ", k, ", sorteo = ", sorteo))
+      if (k %in% 5:6){
+        next # saltamos dos valores
+      } else if (sorteo  == 1){
+        print("Resultado del sorteo es 1, fin del bucle")
+        break # paramos si un valor aleatorio es 1
+      }
+      valores[k] = sorteo # se ejecuta cuando no se cumplan las condiciones
+    } 
+    valores
+```
+## while
+
+```{r}
+# Ejemplo de bucle while
+k = 0
+while (k < 4){
+  k = k + 1
+  print(k)
+  if(sample(1:6, 1) == 6){
+    print("Final prematuro")
+    break()
+  } 
+}
+```
+
+
+## Funciones de R
+
+```{r}
+doble = function(x = 5){
+  2 * x
+}
+
+
+doble(1:5)
+```
+
+
+
+

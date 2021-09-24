@@ -1,0 +1,302 @@
+---
+title: "A2"
+author: "Alvaro Rodriguez Mujica"
+date: "20/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Tarea 2
+
+Librerias: 
+```{r}
+library(tidyverse)
+library(dplyr)
+```
+
+
+## Ejercicio 1. Simulando variables aleatorias discretas.
+
+### Apartado 1:
+
+Calcula la media y la varianza teóricas de esta variable
+```{r}
+X = c(0:3)
+P = c(64/125, 48/125, 12/125, 1/125)
+(X1_probs = data.frame(X = 0:3, prob = P))
+(mean_X1 = sum(X*P))
+(sigma_X1 = sum((X - mean_X1)^2 * P))
+
+```
+### Apartado 2: 
+Combina sample con replicate para simular cien mil muestras de tamaño 10 de esta variable X1. Estudia la distribución de las medias muestrales como hemos hecho en ejemplos previos, ilustrando con
+gráficas la distribución de esas medias muestrales
+```{r}
+set.seed(100)
+N = 100000
+n = 10
+poblacion = c(0, 1, 2, 3)
+p1 = c(64, 48, 12, 1)
+X = replicate(N, {
+muestra_X = sample(poblacion, n, prob = p1, replace = TRUE)
+mean(muestra_X)
+})
+head(X, 10)
+
+hist(X,
+     main = "", 
+     col = "orange")
+abline(v = mean(X), lty = 2, lwd = 5, col = "blue")
+
+```
+Cambia después el tamaño de la muestra a 30 y repite el
+análisis.
+```{r}
+set.seed(100)
+N = 100000
+n = 30
+poblacion = c(0, 1, 2, 3)
+p1 = c(64, 48, 12, 1)
+X = replicate(N, {
+muestra_X = sample(poblacion, n, prob = p1, replace = TRUE)
+mean(muestra_X)
+})
+head(X, 10)
+
+prop.table(table(X))
+hist(X,
+     main = "", 
+     col = "orange")
+abline(v = mean(X), lty = 2, lwd = 5, col = "blue")
+```
+
+
+### Apartado 3: 
+Suponemos que X1 y X2 son independientes. 
+¿Qué valores puede tomar la suma X1 + X2?
+La suma de X1 y X2 da 6 posibles valores: 0, 1, 2, 3, 4, 5
+¿Cual es su tabla de probabilidad?
+```{r}
+prob = c(64/125,48/125,12/125,1/125)*rep(c(1/2,1/4,1/4), each = 4)
+
+X_1 = rep(0:3, 3)
+X_2 = rep(0:2, each = 4)
+suma = X_1 + X_2
+(table = data.frame(suma, X_1, X_2, prob))
+
+(table1 = table %>% 
+  group_by(suma) %>% 
+  summarise(prob = sum(prob)))
+
+```
+
+### Apartado 4
+```{r}
+X1 = sample(0:3)
+X2 = sample(0:2)
+P1 = c(64/125, 48/125, 12/125, 1/125)
+P2 = c(1/2, 1/4, 1/4)
+
+mean_X2 = sum(X2*P2)
+
+meanSum = mean_X1 + mean_X2
+
+set.seed(100)
+k = 10000
+
+X1 = c(0:3)
+X2 = c(0:2)
+
+
+medias_suma_valores = replicate(k, {
+  muestra = sample(X1, size = 1, replace = TRUE, prob = P1) + sample(X2, size = 1, replace = TRUE, prob = P2)
+  mean(muestra)
+})
+mean(medias_suma_valores)
+
+
+```
+
+
+
+## Ejercicio 2. Datos Limpios
+
+Hay tres criterios que hacen que un conjunto sea ordenado o "tidy":
+1. Cada variable debe tener su propia columna
+2. Cada observación debe tener su propia fila
+3. Cada valor debe tener su propia celda
+Mirando el dataset de testResults.csv, podemos observar que estos criterios no se cumplen. 
+Debido a que el objetivo de la tabla es saber que notas sacaron los estudiantes en los tests, pienso que siguiendo los principios de tidy, cada observación(cada nota) debe tener su propia fila. POr ello, usaremos la función pivot_longer().
+Otro error que se puede percibir es en la columna de gender_age, la cual no coincide con el principio de que cada valor debe tener su propia celda ya que cada celda tiene el valor del sexo y de la edad. Por ello, usando separate(), separaremos los dos valores en dos columnas distintas, una llamada gender y otra llamada age,  y a su vez haremos convert = TRUE para convertir age en una variable numérica (int) y no factorial(chr). 
+Además, queremos ordenar el dataset de alguna manera, ya sea alfabéticamente, o por el id. En mi caso yo creo que lo ordenaré alfabéticamente por el nombre del alumno usando la función arrange(). 
+Una parte importante de limpiar un dataset, es ver si hay missing values (NAs), explícitos o implícitos, para ver si afectan de alguna manera a nuestros datos. Por ello, veremos primero si nuestro dataset contiene algun tipo de missing value, y si los contiene veremos que hacer con ellos.
+Por último, para que el dataset sea visiblemente más limpio, borraremos en todas las celdas de la columna week los cuatro primeros caracteres, es decir, borraremos la palabra "week" ya que es información innecesaria dejando en dicha columna el valor numérico de la semana en la cual se realizó el examen.
+```{r}
+testResults = read_csv("testResults.csv")
+tR_tidy <- testResults %>%
+  separate(gender_age, c("gender", "age"), convert = TRUE) %>% 
+  pivot_longer(c('week1', 'week2', 'week3', 'week4', 'week5'), names_to = "week", values_to = "grade") %>% 
+  arrange(name) 
+
+tR_tidy$week <- gsub("week", "", as.character(tR_tidy$week))
+
+sum(is.na(tR_tidy))
+
+head(tR_tidy,10)
+```
+
+
+## Ejercicio 3. Lectura de R4DS.
+
+### Ej 2 de 7.5.1.1
+¿Qué variable de diamantes es más importante para predecir el precio de un diamante?
+El dataset de diamonds contiene 7 variables que pueden ser las que mejor predigan el precio de un diamante. 
+Empezamos con price y carat. Ambas variables con variables continuas, por lo que utilizaré un gráfico de puntos. 
+```{r}
+ggplot(diamonds, aes(x = carat, y = price)) + 
+  geom_point()
+
+```
+La variable carat de momento parece ser un buen predictor del precio de un diamante. Ahora, vamos a ver la relación entre price y cut. Price es una variable continua mientras que cut es una variable categórica ordenada, por lo que haremos un boxplot como dice el libro. 
+```{r}
+ggplot(diamonds, aes(x = cut, y = price)) +
+  geom_boxplot()
+```
+Cut no nos ofrece suficiente información como para ser un buen predictor del precio de un diamante, no parece haber una clara relación entre el precio y el corte de un diamante. La siguiente variable que vamos a observar es color. Color al igual que cut es una varible categórica ordenada por lo que vamos a crear un boxplot.
+```{r}
+ggplot(diamonds, aes(x = color, y = price)) +
+  geom_boxplot()
+```
+La escala de colores va de D(el mejor) a J(el peor) por lo que existe una relación negativa entre el color y el precio. Sin embargo, esa relación no es lo suficientemente fuerte como para que color sea un buen predictor del precio de un diamante. La siguiente variable que vamos a ver es clarity o claridad. Al igual que color o cut, clarity es una variable categórica ordenada por lo que haremos un boxplot para mostrar la relación entre price y clarity.
+```{r}
+ggplot(diamonds, aes(x = clarity, y = price)) +
+  geom_boxplot()
+```
+La escala de clarity va de I1(la peor) a IF(la mejor), por lo que existe una relación negativa entre clarity y price. Pero al igual que color, clarity la relación no es lo suficientemente fuerte y los valores dentro de una misma categoría varían demasiado como para predecir correctamente el precio de un diamante según su claridad. Vamos con depth. La variable depth es una variable continua, por lo que tal como hice con carat, vamos a crear un gráfico de puntos. 
+```{r}
+ggplot(diamonds, aes(x = depth, y = price)) + 
+  geom_point()
+
+```
+No es posible observar ningún tipo de relación entre depth y price por lo que descartamos que depth pueda ser un buen predictor del precio de un diamante. Por último vamos a comprobar si table puede usarse para predecir el precio de un diamante. A priori, viendo el dataset de diamantes imagino que el gráfico de puntos será bastante parecido al de depth.
+```{r}
+ggplot(diamonds, aes(x = table, y = price)) + 
+  geom_point()
+```
+Efectivamente, al igual que depth, el gráfico no aporta información suficiente para pensar que se puede predecir el precio de un diamante según el table. 
+Para concluir, según el análisis que hemos hecho a las variables, podemos decir con confianza que la mejor y única variable que nos puede ayudar a predecir el precio de un diamante es carat.  
+
+¿Cómo esta correlacionada esta variable con el corte?
+Ya que carat es una variable continua y cut es una variable categórica, podemos visualizar dicha relación con la ayuda de un boxplot.
+```{r}
+ggplot(diamonds, aes(x = cut, y = carat)) + 
+  geom_boxplot()
+```
+Se puede observar una ligera relación negativa entre carat y cut. A su vez, vemos que los diamantes de más quilates, los cuales son más caros(como hemos visto en el apartado anterior), tienen un corte de "Fair", es decir, un peor corte. 
+
+¿Por qué la combinación de estas dos relaciones conlleva que los diamantes de menor calidad sean más costosos? 
+La única posibilidad que puede haber del por qué de esta relación es que los diamantes cuanto más grandes son, tienden a tener unos cortes menos claros y precisos, que un diamante que es bastante pequeño. Y obviamente cuanto más grande es un diamante, de más quilates es. Es decir, un diamante grande se puede vender fácilmente aun si sus cortes no son muy precisos, sin embargo un diamante pequeño si no tiene unos cortes muy precisos, dificilmente lo podrás vender o lo tendrás que vender a un precio del cual saques poco provecho. 
+
+### Ejercicio 1 de 12.6.1 (Me equivoqué pensando que había que hacerlo)
+
+¿Es razonable fijar values_drop_na = TRUE para hacer más simple el verificar que tenemos los valores correctos? Piensa en cómo los valores faltantes están representados en este dataset. ¿Existen valores faltantes implícitos? ¿Cuál es la diferencia entre NA y cero?
+Según el capítulo 12, los missing values pueden estar representados de forma explícita, si aparece como NA, o de forma implícita, si simplemente no aparece en los datos.
+Es razonable fijar values_drop_na = TRUE si efectivamente los missing values de nuestro dataset son explícitos y aparecen como NAs. Para ello tenemos que ver primero como aparecen los missing values en nuestro dataset, who. A su vez, tenemos que ver cual es la diferencia entre NA y el valor 0, debido a que es posible que el valor 0 corresponda a missing values. Por ello tenemos que 3 opciones de posibles missing values en nuestro dataset: 
+- Que sean explícitos
+- Que sean implícitos
+- Que tengan el valor 0
+Vamos a ver uno por uno para asegurarnos de en nuestro dataset como están representados los missing values y si es razonable usar values_drop_na = TRUE.
+Para saber si el valor 0 se usa como indicador de missing values, tan solo tenemos que comprobar si en nuestro dataset existen valores NAs o implícitos junto a valores 0. Si es así el caso, entonces podemos descartar la posibilidad de que el 0 actue como missing value.
+```{r}
+view(who)
+who1<- who %>%
+  pivot_longer(
+    cols = new_sp_m014:newrel_f65, 
+    names_to = "key", 
+    values_to = "cases", 
+    #values_drop_na = TRUE
+  ) %>% 
+  mutate(
+    key = stringr::str_replace(key, "newrel", "new_rel")
+  ) %>%
+  separate(key, c("new", "var", "sexage")) %>% 
+  select(-new, -iso2, -iso3) %>% 
+  separate(sexage, c("sex", "age"), sep = 1)
+
+who1 %>% 
+  filter(cases == 0) %>% 
+  nrow()
+ 
+sum(is.na(who1$cases))
+
+```
+Como hay valores explícitos (329394) y valores 0 (11080), podemos concluir que el 0 no actúa como missing value si no que simplemente actúa como indicador de que ha habido 0 casos. 
+Vamos a comprobar si además de valores explícitos, nuestro dataset contiene valores implícitos. Para ello vamos a comparar el número de filas con el número de filas cuyas celdas están completas(no vacías).
+```{r}
+nrow(who1)
+
+who1 %>% 
+  complete(country) %>% 
+  nrow()
+
+who1 %>% 
+  complete(year) %>% 
+  nrow()
+
+who1 %>% 
+  complete(var) %>% 
+  nrow()
+
+who1 %>% 
+  complete(sex) %>% 
+  nrow()
+
+who1 %>% 
+  complete(age) %>% 
+  nrow()
+
+who1 %>% 
+  complete(cases) %>% 
+  nrow()
+```
+El dataset no contiene missing values implícitos en ninguna de las columnas.
+Como conclusión, me parece que es razonable fijar values_drop_na = TRUE ya que hemos comprobado que los únicos missing values en este dataset son explícitos, por lo que no tenemos que preocuparnos de missing values implícitos o de celdas que contengan el valor 0.
+ 
+
+### Ejercicio 4 de 12.6.1
+Para cada país, año y sexo calcula el total del número de casos de tuberculosis. Crea una visualización informativa de los datos:
+
+```{r}
+#Limpiamos los datos
+library(tidyverse)
+
+who2 <- who %>%
+  pivot_longer(
+    cols = new_sp_m014:newrel_f65, 
+    names_to = "key", 
+    values_to = "cases", 
+    values_drop_na = TRUE
+  ) %>% 
+  mutate(
+    key = stringr::str_replace(key, "newrel", "new_rel")
+  ) %>%
+  separate(key, c("new", "var", "sexage")) %>% 
+  select(-new, -iso2, -iso3) %>% 
+  separate(sexage, c("sex", "age"), sep = 1)
+
+#Agrupamos por sexo, pais y año, y a su vez creamos con ggplot una gráfica informativa
+who2 %>% 
+  group_by(country, year, sex) %>% 
+  filter(year > 1995) %>% 
+  summarise(cases = sum(cases)) %>% 
+  unite(country_sex, country, sex, remove = FALSE) %>%
+  ggplot() +
+  geom_line(mapping = aes(x = year, y = cases, color = sex,
+                          group = country_sex))
+```
+
+
+
